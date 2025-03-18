@@ -1,6 +1,5 @@
-from helloworld.app import SnakeGame
+from helloworld.app import GameSelector
 
 
 if __name__ == "__main__":
-    SnakeGame("Snake Game", "org.example.snake").main_loop()
-
+    GameSelector("Game Selector", "com.example.gameselector").main_loop()

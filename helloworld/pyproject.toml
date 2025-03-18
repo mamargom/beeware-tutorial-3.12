@@ -15,7 +15,9 @@ long_description = """More details about the app should go here.
 """
 sources = [
     "src/helloworld",
-    "src/helloworld/helpers",
+    "src/helloworld/juegos",
+    "src/helloworld/serpiente",
+    "src/helloworld/serpiente/helpers",
 ]
 test_sources = [
     "tests",

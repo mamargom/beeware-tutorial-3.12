@@ -113,3 +113,4 @@ class SnakeGame:
 
 def create_game():
     return SnakeGame().main_box
+

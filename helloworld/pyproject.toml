@@ -14,10 +14,11 @@ description = "My first application"
 long_description = """More details about the app should go here.
 """
 sources = [
+    "src",
     "src/helloworld",
     "src/helloworld/juegos",
-    "src/helloworld/serpiente",
-    "src/helloworld/serpiente/helpers",
+    "src/helloworld/juegos/serpiente",
+    "src/helloworld/juegos/serpiente/helpers",
 ]
 test_sources = [
     "tests",

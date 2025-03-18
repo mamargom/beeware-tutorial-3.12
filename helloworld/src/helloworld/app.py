@@ -7,10 +7,12 @@ from juegos.serpiente import juego_serpiente
 
 class GameSelector(toga.App):
     def startup(self):
+
         self.main_window = toga.MainWindow(title=self.formal_name)
         
         self.games = {
-            "Serpiente": "juegos.serpiente.juego_serpiente",  # Nombre del módulo Python
+            #"Serpiente": "helloworld.juegos.serpiente.juego_serpiente",  # Nombre del módulo Python
+            "Serpiente": juego_serpiente.__name__,
             "Juego 2": "juego2",  
             "Juego 3": "juego3"   
         }
@@ -20,7 +22,7 @@ class GameSelector(toga.App):
         for game_name, game_module in self.games.items():
             button = toga.Button(
                 text=game_name,
-                on_press=lambda widget, module=game_module: self.load_game(module),
+                on_press=lambda widget, module=game_module:self.load_game(module),
                 style=Pack(padding=5)
             )
             self.main_box.add(button)
@@ -30,9 +32,10 @@ class GameSelector(toga.App):
 
     def load_game(self, module_name):
         try:
-            game_module = importlib.import_module(module_name)
-            game_widget = game_module.create_game()
-            self.main_window.content = game_widget
+            #game_module = importlib.import_module(module_name)
+            #game_widget = game_module.create_game()
+            #self.main_window.content = game_widget
+            self.main_window.content = juego_serpiente.create_game()
         except Exception as e:
             print(f"Error al cargar el juego {module_name}: {e}")
 

@@ -1,6 +1,7 @@
 import toga
 from toga.style import Pack
 from toga.style.pack import COLUMN
+from toga.window import Window, WindowSet
 import importlib
 
 from juegos.serpiente import juego_serpiente
@@ -8,36 +9,42 @@ from juegos.serpiente import juego_serpiente
 class GameSelector(toga.App):
     def startup(self):
 
-        self.main_window = toga.MainWindow(title=self.formal_name)
+        self.main_window = Window("elige un juego")
+        self.selection_box = toga.Box(style=Pack(direction=COLUMN, padding=10))
         
-        self.games = {
+        self.juegos = {
             #"Serpiente": "helloworld.juegos.serpiente.juego_serpiente",  # Nombre del módulo Python
-            "Serpiente": juego_serpiente.__name__,
-            "Juego 2": "juego2",  
-            "Juego 3": "juego3"   
+            "Serpiente": lambda : juego_serpiente.crea_box_de_juego(),
+            "Reflejos":  lambda : juego_serpiente.crea_box_de_juego(),  
         }
-
-        self.main_box = toga.Box(style=Pack(direction=COLUMN, padding=10))
         
-        for game_name, game_module in self.games.items():
+        for nombre_del_juego, box_de_juego in self.juegos.items():
             button = toga.Button(
-                text=game_name,
-                on_press=lambda widget, module=game_module:self.load_game(module),
+                text=nombre_del_juego,
+                on_press=lambda widget, box=box_de_juego: self.carga_un_juego(nombre_del_juego, box()),  
                 style=Pack(padding=5)
             )
-            self.main_box.add(button)
-        
-        self.main_window.content = self.main_box
-        self.main_window.show()
+            self.selection_box.add(button)
 
-    def load_game(self, module_name):
+        self.main_window.on_close = lambda widget: self.cierra_app()
+        #carga el menu selector
+        self.carga_un_juego("Elije juego", self.selection_box)
+
+
+    def cierra_app(self):
+        if self.main_window.content == self.selection_box:
+            self.app.exit()
+        else:
+            self.carga_un_juego("elige un juego", self.selection_box)
+        
+
+    def carga_un_juego(self, titulo, box_de_juego):
         try:
-            #game_module = importlib.import_module(module_name)
-            #game_widget = game_module.create_game()
-            #self.main_window.content = game_widget
-            self.main_window.content = juego_serpiente.create_game()
+            self.app.main_window.content = box_de_juego
+            self.app.main_window.title = titulo
+            self.app.main_window.show()
         except Exception as e:
-            print(f"Error al cargar el juego {module_name}: {e}")
+            print(f"Error al cargar el juego {box_de_juego}: {e}")
 
 if __name__ == "__main__":
     GameSelector("Game Selector", "com.example.gameselector").main_loop()

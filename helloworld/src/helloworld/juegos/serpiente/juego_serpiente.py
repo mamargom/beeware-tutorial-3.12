@@ -9,7 +9,8 @@ CELL_SIZE = 20
 GRID_WIDTH = 20
 GRID_HEIGHT = 20
 
-class SnakeGame:
+class JuegoSerpiente:
+
     def __init__(self):
         self.serpiente = Serpiente(5)
         self.direction = "RIGHT"
@@ -32,6 +33,7 @@ class SnakeGame:
         controls.add(btn_down)
         controls.add(btn_right)
         controls.add(btn_restart)
+        
 
         self.main_box = toga.Box(style=Pack(direction=COLUMN))
         self.main_box.add(self.canvas)
@@ -111,6 +113,7 @@ class SnakeGame:
         if self.direction != "LEFT":
             self.direction = "RIGHT"
 
-def create_game():
-    return SnakeGame().main_box
+
+def crea_box_de_juego():
+    return JuegoSerpiente().main_box
 

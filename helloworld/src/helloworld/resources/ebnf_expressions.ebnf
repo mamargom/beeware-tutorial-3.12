@@ -1,0 +1,44 @@
+
+(* EXPRESSIONS *)
+expression =
+      disjunction "if" disjunction "else" expression
+    | disjunction
+    | lambdef
+    ;
+
+named_expression =
+      assignment_expression
+    | expression - ":=" (* negative lookahead workaround *)
+    ;
+
+assignment_expression =
+    NAME ":=" expression
+    ;
+
+lambdef =
+    "lambda" lambda_params? ":" expression
+    ;
+
+lambda_params =
+    lambda_param ("," lambda_param)*
+    ;
+
+lambda_param =
+    NAME
+    ;
+
+yield_expr =
+      "yield" "from" expression
+    | "yield" star_expressions?
+    ;
+
+star_expressions =
+      star_expression ("," star_expression)+ ","?
+    | star_expression ","
+    | star_expression
+    ;
+
+star_expression =
+      "*" bitwise_or
+    | expression
+    ;

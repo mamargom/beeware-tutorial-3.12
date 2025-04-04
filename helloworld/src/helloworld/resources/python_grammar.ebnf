@@ -1,0 +1,197 @@
+
+(* ========================= PYTHON GRAMMAR IN EBNF ========================= *)
+
+(* ------------------------- STARTING RULES ------------------------- *)
+file = [statements], ENDMARKER ;
+
+(* ---------------------- GENERAL STATEMENTS ------------------------ *)
+statements = { statement } ;
+statement = compound_stmt | simple_stmts ;
+simple_stmts = simple_stmt, !";", NEWLINE | simple_stmt, { ";", simple_stmt }, [";"], NEWLINE ;
+
+(* ----------------------- SIMPLE STATEMENTS ------------------------ *)
+simple_stmt = assignment
+            | type_alias
+            | star_expressions
+            | return_stmt
+            | import_stmt
+            | raise_stmt
+            | "pass"
+            | del_stmt
+            | yield_stmt
+            | assert_stmt
+            | "break"
+            | "continue"
+            | global_stmt
+            | nonlocal_stmt ;
+
+assignment = (star_targets, "=", (yield_expr | star_expressions), !"=", [TYPE_COMMENT])
+           | single_target, augassign, (yield_expr | star_expressions) ;
+
+augassign = "+=" | "-=" | "*=" | "@=" | "/=" | "%=" | "&=" | "|=" | "^=" | "<<=" | ">>=" | "**=" | "//=" ;
+
+return_stmt = "return", [star_expressions] ;
+raise_stmt = "raise", expression, ["from", expression] | "raise" ;
+global_stmt = "global", NAME, { ",", NAME } ;
+nonlocal_stmt = "nonlocal", NAME, { ",", NAME } ;
+del_stmt = "del", del_targets ;
+yield_stmt = yield_expr ;
+assert_stmt = "assert", expression, [",", expression] ;
+
+(* --------------------- COMPOUND STATEMENTS ------------------------ *)
+compound_stmt = function_def
+              | if_stmt
+              | class_def
+              | with_stmt
+              | for_stmt
+              | try_stmt
+              | while_stmt
+              | match_stmt ;
+
+block = NEWLINE, INDENT, statements, DEDENT | simple_stmts ;
+
+(* ------------------------- FUNCTION DEF --------------------------- *)
+function_def = ["@ ", named_expression, NEWLINE], "def", NAME, "(", [params], ")", ["->", expression], ":", block ;
+
+params = parameters ;
+parameters = param, { ",", param } ;
+param = NAME, [":", expression], ["=", expression] ;
+
+(* -------------------------- IF STATEMENT -------------------------- *)
+if_stmt = "if", named_expression, ":", block, { "elif", named_expression, ":", block }, [else_block] ;
+else_block = "else", ":", block ;
+
+(* -------------------------- WHILE STATEMENT ------------------------ *)
+while_stmt = "while", named_expression, ":", block, [else_block] ;
+
+(* --------------------------- FOR STATEMENT ------------------------- *)
+for_stmt = "for", star_targets, "in", star_expressions, ":", block, [else_block]
+         | "async", "for", star_targets, "in", star_expressions, ":", block, [else_block] ;
+
+(* --------------------------- WITH STATEMENT ------------------------ *)
+with_stmt = "with", with_item, { ",", with_item }, ":", block ;
+with_item = expression, ["as", star_target] ;
+
+(* --------------------------- TRY STATEMENT ------------------------ *)
+try_stmt = "try", ":", block, except_block, { except_block }, [else_block], [finally_block]
+         | "try", ":", block, finally_block ;
+
+except_block = "except", [expression], ["as", NAME], ":", block ;
+finally_block = "finally", ":", block ;
+
+(* -------------------------- CLASS STATEMENT ------------------------ *)
+class_def = "class", NAME, ["(", [arguments], ")"], ":", block ;
+
+(* -------------------------- MATCH STATEMENT ------------------------ *)
+match_stmt = "match", subject_expr, ":", NEWLINE, INDENT, case_block, { case_block }, DEDENT ;
+subject_expr = star_named_expression, [",", star_named_expressions] | named_expression ;
+
+case_block = "case", patterns, [guard], ":", block ;
+guard = "if", named_expression ;
+
+(* ----------------------------- IMPORTS ----------------------------- *)
+import_stmt = import_name | import_from ;
+import_name = "import", dotted_as_names ;
+import_from = "from", { "." | "..." }, dotted_name, "import", import_from_targets
+            | "from", { "." | "..." }, "import", import_from_targets ;
+import_from_targets = "(", import_from_as_names, [","], ")"
+                    | import_from_as_names
+                    | "*" ;
+import_from_as_names = import_from_as_name, { ",", import_from_as_name } ;
+import_from_as_name = NAME, ["as", NAME] ;
+dotted_as_names = dotted_as_name, { ",", dotted_as_name } ;
+dotted_as_name = dotted_name, ["as", NAME] ;
+dotted_name = NAME, { ".", NAME } ;
+
+(* ------------------------ EXPRESSIONS ----------------------------- *)
+star_expressions = star_expression, { ",", star_expression }, [","] ;
+star_expression = "*", bitwise_or | expression ;
+yield_expr = "yield", ["from", expression] | "yield", [star_expressions] ;
+
+expression = disjunction, "if", disjunction, "else", expression
+           | disjunction ;
+
+disjunction = conjunction, { "or", conjunction } ;
+conjunction = inversion, { "and", inversion } ;
+inversion = "not", inversion | comparison ;
+comparison = bitwise_or, { comp_op, bitwise_or } ;
+comp_op = "==" | "!=" | "<" | "<=" | ">" | ">=" | "is" | "is not" | "in" | "not in" ;
+
+bitwise_or = bitwise_xor, { "|", bitwise_xor } ;
+bitwise_xor = bitwise_and, { "^", bitwise_and } ;
+bitwise_and = shift_expr, { "&", shift_expr } ;
+
+shift_expr = sum_expr, { "<<" | ">>", sum_expr } ;
+sum_expr = term, { "+" | "-", term } ;
+term = factor, { "*" | "/" | "//" | "%" | "@", factor } ;
+factor = ("+" | "-" | "~")?, power ;
+power = primary, ["**", factor] ;
+
+primary = atom, { trailer } ;
+trailer = "(", [arguments], ")" | "[", slices, "]" | ".", NAME ;
+
+atom = NAME | NUMBER | STRING | "True" | "False" | "None"
+     | list | tuple | dict | set | group ;
+
+list = "[", [star_named_expressions], "]" ;
+tuple = "(", [star_named_expressions], ")" ;
+dict = "{", [double_starred_kvpairs], "}" ;
+set = "{", star_named_expressions, "}" ;
+group = "(", expression, ")" ;
+
+double_starred_kvpairs = double_starred_kvpair, { ",", double_starred_kvpair }, [","] ;
+double_starred_kvpair = "**", expression | kvpair ;
+kvpair = expression, ":", expression ;
+
+star_named_expressions = star_named_expression, { ",", star_named_expression }, [","] ;
+star_named_expression = "*", expression | expression ;
+
+(* ------------------------- FUNCTION CALL -------------------------- *)
+arguments = [args] ;
+args = (starred_expression | expression), { ",", (starred_expression | expression) }, [",", kwargs] | kwargs ;
+starred_expression = "*", expression ;
+kwargs = kwarg_or_starred, { ",", kwarg_or_starred }, [",", kwarg_or_double_starred] ;
+kwarg_or_starred = NAME, "=", expression | starred_expression ;
+kwarg_or_double_starred = NAME, "=", expression | "**", expression ;
+
+(* ----------------------------- TARGETS ---------------------------- *)
+star_targets = star_target, { ",", star_target }, [","] ;
+star_target = "*", star_target | target_with_star_atom ;
+target_with_star_atom = NAME | "(" star_target ")" | "[" star_target "]" ;
+
+single_target = NAME | "(" single_target ")" ;
+del_targets = del_target, { ",", del_target }, [","] ;
+del_target = NAME | "(" del_target ")" | "[" del_target "]" ;
+
+(* ------------------------- TERMINALS ----------------------------- *)
+NAME = ? [a-zA-Z_][a-zA-Z0-9_]* ? ;
+NUMBER = ? [0-9]+(\.[0-9]+)? ? ;
+STRING = ? '"' [^"\]* '"' ? ;
+TYPE_COMMENT = ? '#' .* ? ;
+NEWLINE = ? '
+' ? ;
+INDENT = ? '<INDENT>' ? ;
+DEDENT = ? '<DEDENT>' ? ;
+ENDMARKER = ? '<EOF>' ? ;
+
+
+(* Comprehensions & Generators *)
+
+for_if_clauses =
+    for_if_clause+ ;
+
+for_if_clause =
+    "async" "for" star_targets "in" disjunction ("if" disjunction)* |
+    "for" star_targets "in" disjunction ("if" disjunction)* ;
+
+listcomp =
+    "[" named_expression for_if_clauses "]" ;
+
+setcomp =
+    "{" named_expression for_if_clauses "}" ;
+
+genexp =
+    "(" (assignment_expression | expression) for_if_clauses ")" ;
+
+dictcomp =
+    "{" kvpair for_if_clauses "}" ;

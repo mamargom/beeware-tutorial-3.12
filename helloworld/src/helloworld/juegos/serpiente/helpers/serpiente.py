@@ -1,9 +1,14 @@
 
+from toga import Canvas
+
 class Serpiente():
 
     _DIAMETRO_CABEZA = 10
 
     def __init__(self, longitud_serpiente, posicion_x=0, posicion_y=0):
+        
+        #mirar el caso si longitud <= 0
+        
         # cabeza 
         self.cabeza = Cabeza(posicion_x,posicion_y)
 
@@ -40,10 +45,13 @@ class Serpiente():
     def mueve_abajo(self):
         self.mueve_a_posicion(self.cabeza._posicion_x, self.cabeza._posicion_y + Serpiente._DIAMETRO_CABEZA)
 
-    def pintate(self, canvas):
-        self.cabeza.pintate(canvas)
+    def pintate(self, canvas, color="red"):
+        self.cabeza.pintate(canvas, color)
         if self.cola != None:
-            self.cola.pintate(canvas)
+            self.cola.pintate(canvas, color)
+
+    def borrate(self, canvas: Canvas):
+        self.pintate(canvas, "white")
 
 class Cabeza():
         def __init__(self,posicion_x, posicion_y):
@@ -57,8 +65,8 @@ class Cabeza():
         def dime_posicion(self):
             return (self._posicion_x, self._posicion_y)
 
-        def pintate(self, canvas):
-            with canvas.context.Fill(color="red") as fill:
+        def pintate(self, canvas:Canvas, color):
+            with canvas.context.Fill(color=color) as fill:
                 fill.arc(self._posicion_x, self._posicion_y, self.diametro_cabeza)          
 
 

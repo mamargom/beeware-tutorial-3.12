@@ -23,7 +23,7 @@ class JuegoSerpiente(toga.App):
 
         self.cnt = 1;
 
-        self.canvas = toga.Canvas(style=Pack(flex=1))
+        self.canvas = toga.Canvas(style=Pack(flex=1, background_color="white"))
         self.status_label = toga.Label("Playing...", style=Pack(padding=5))
         
         btn_up = toga.Button("↑", on_press=self.move_up, style=Pack(width=40, height=40))
@@ -48,32 +48,27 @@ class JuegoSerpiente(toga.App):
 
     async def game_loop(self):
         while True:
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.5)
             if self.running:
                 self.cnt += 1;
                 print("game loop - entry" + str(self.cnt))
                 self.update_game()
                 print("game loop - out" + str(self.cnt))
 
-    def pinta_cabeza(self, cabeza: Cabeza):
-        with self.canvas.context.Fill(color="red") as fill:
-            circle = fill.arc(cabeza._posicion_x, cabeza._posicion_y, cabeza.diametro_cabeza)
-            self.canvas.redraw()
 
     def draw_game(self, canvas, context):
         self.serpiente.pintate(canvas)
         #self.comida.pintate(canvas)
         self.canvas.redraw()
         
-    def random_food(self):
-        while True:
-            food = (random.randint(0, GRID_WIDTH - 1), random.randint(0, GRID_HEIGHT - 1))
-            if food not in self.snake:
-                return food
 
     def update_game(self):
         if not self.running:
             return
+
+        self.canvas.redraw()
+        self.serpiente.borrate(self.canvas)
+        self.canvas.redraw()
 
         if self.direction == "UP":
             self.serpiente.mueve_arriba()
@@ -84,16 +79,18 @@ class JuegoSerpiente(toga.App):
         elif self.direction == "RIGHT":
             self.serpiente.mueve_a_derecha()
 
-
         self.draw_game(self.canvas, self.canvas.context)
 
     def restart_game(self, widget):
-        self.food = self.random_food()
+        self.running = False
         self.direction = "RIGHT"
+        self.status_label.text = "Stopped..."
+        #self.canvas.redraw()
+        self.serpiente.borrate(self.canvas)
+        self.serpiente = Serpiente(5)
+        self.draw_game(self.canvas, self.canvas.context)
         self.running = True
         self.status_label.text = "Playing..."
-        #self.canvas.redraw()
-        self.draw_game(self.canvas, self.canvas.context)
 
     def move_up(self, widget):
         if self.direction != "DOWN":

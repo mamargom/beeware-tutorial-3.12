@@ -4,7 +4,7 @@ from toga.style.pack import COLUMN
 from toga.window import Window, WindowSet
 import importlib
 
-from juegos.serpiente import juego_serpiente
+from helloworld.juegos.serpiente import juego_serpiente, gpt_juego_serpiente
 
 class GameSelector(toga.App):
     def startup(self):
@@ -15,7 +15,7 @@ class GameSelector(toga.App):
         self.juegos = {
             #"Serpiente": "helloworld.juegos.serpiente.juego_serpiente",  # Nombre del módulo Python
             "Serpiente": lambda : juego_serpiente.crea_box_de_juego(),
-            "Reflejos":  lambda : juego_serpiente.crea_box_de_juego(),  
+            "Reflejos":  lambda : gpt_juego_serpiente.crea_box_de_juego(),  
         }
         
         for nombre_del_juego, box_de_juego in self.juegos.items():

@@ -3,20 +3,25 @@ from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 import random
 import asyncio
+
 from .helpers.serpiente import Serpiente, Cabeza
 
 CELL_SIZE = 20
 GRID_WIDTH = 20
 GRID_HEIGHT = 20
 
-class JuegoSerpiente:
 
+
+class JuegoSerpiente(toga.App):
+    
     def __init__(self):
+
         self.serpiente = Serpiente(5)
+
         self.direction = "RIGHT"
         self.running = True
-        self.snake = [(5, 5), (4, 5), (3, 5)]
-        self.food = self.random_food()
+
+        self.cnt = 1;
 
         self.canvas = toga.Canvas(style=Pack(flex=1))
         self.status_label = toga.Label("Playing...", style=Pack(padding=5))
@@ -33,7 +38,6 @@ class JuegoSerpiente:
         controls.add(btn_down)
         controls.add(btn_right)
         controls.add(btn_restart)
-        
 
         self.main_box = toga.Box(style=Pack(direction=COLUMN))
         self.main_box.add(self.canvas)
@@ -46,14 +50,21 @@ class JuegoSerpiente:
         while True:
             await asyncio.sleep(0.2)
             if self.running:
+                self.cnt += 1;
+                print("game loop - entry" + str(self.cnt))
                 self.update_game()
+                print("game loop - out" + str(self.cnt))
 
-    def draw_game(self):
+    def pinta_cabeza(self, cabeza: Cabeza):
         with self.canvas.context.Fill(color="red") as fill:
-            for x, y in self.snake:
-                fill.rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
-        self.canvas.redraw()
+            circle = fill.arc(cabeza._posicion_x, cabeza._posicion_y, cabeza.diametro_cabeza)
+            self.canvas.redraw()
 
+    def draw_game(self, canvas, context):
+        self.serpiente.pintate(canvas)
+        #self.comida.pintate(canvas)
+        self.canvas.redraw()
+        
     def random_food(self):
         while True:
             food = (random.randint(0, GRID_WIDTH - 1), random.randint(0, GRID_HEIGHT - 1))
@@ -64,38 +75,25 @@ class JuegoSerpiente:
         if not self.running:
             return
 
-        head_x, head_y = self.snake[0]
         if self.direction == "UP":
-            head_y -= 1
+            self.serpiente.mueve_arriba()
         elif self.direction == "DOWN":
-            head_y += 1
+            self.serpiente.mueve_abajo()
         elif self.direction == "LEFT":
-            head_x -= 1
+            self.serpiente.mueve_a_izquierda()
         elif self.direction == "RIGHT":
-            head_x += 1
+            self.serpiente.mueve_a_derecha()
 
-        new_head = (head_x, head_y)
 
-        if new_head in self.snake or not (0 <= head_x < GRID_WIDTH and 0 <= head_y < GRID_HEIGHT):
-            self.running = False
-            self.status_label.text = "Game Over! Press Restart"
-            return
-
-        self.snake.insert(0, new_head)
-        if new_head == self.food:
-            self.food = self.random_food()
-        else:
-            self.snake.pop()
-
-        self.draw_game()
+        self.draw_game(self.canvas, self.canvas.context)
 
     def restart_game(self, widget):
-        self.snake = [(5, 5), (4, 5), (3, 5)]
         self.food = self.random_food()
         self.direction = "RIGHT"
         self.running = True
         self.status_label.text = "Playing..."
-        self.draw_game()
+        #self.canvas.redraw()
+        self.draw_game(self.canvas, self.canvas.context)
 
     def move_up(self, widget):
         if self.direction != "DOWN":
@@ -113,7 +111,5 @@ class JuegoSerpiente:
         if self.direction != "LEFT":
             self.direction = "RIGHT"
 
-
 def crea_box_de_juego():
     return JuegoSerpiente().main_box
-

@@ -3,41 +3,22 @@ from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 import random
 import asyncio
-import time
-
-from juegos.serpiente.helpers.serpiente import Serpiente
-from juegos.serpiente.helpers.serpiente import Cabeza
+from .helpers.serpiente import Serpiente, Cabeza
 
 CELL_SIZE = 20
 GRID_WIDTH = 20
 GRID_HEIGHT = 20
 
+class GPT_JuegoSerpiente:
 
-
-class SnakeGame(toga.App):
-    serpiente = Serpiente(5);
-    
-    def startup(self):
-        long = SnakeGame.serpiente.longitud()
-
-        self.main_window = toga.MainWindow(title=self.name)
+    def __init__(self):
+        self.serpiente = Serpiente(5)
         self.direction = "RIGHT"
         self.running = True
-
-        self.cnt = 1;
-
-        self.x_circ = 50;
-        self.y_circ = 50;
-        self.x_rect = 80;
-        self.y_rect = 80;
-
-
         self.snake = [(5, 5), (4, 5), (3, 5)]
         self.food = self.random_food()
 
         self.canvas = toga.Canvas(style=Pack(flex=1))
-        self.canvas.redraw()
-
         self.status_label = toga.Label("Playing...", style=Pack(padding=5))
         
         btn_up = toga.Button("↑", on_press=self.move_up, style=Pack(width=40, height=40))
@@ -52,14 +33,12 @@ class SnakeGame(toga.App):
         controls.add(btn_down)
         controls.add(btn_right)
         controls.add(btn_restart)
+        
 
-        main_box = toga.Box(style=Pack(direction=COLUMN))
-        main_box.add(self.canvas)
-        main_box.add(self.status_label)
-        main_box.add(controls)
-
-        self.main_window.content = main_box
-        self.main_window.show()
+        self.main_box = toga.Box(style=Pack(direction=COLUMN))
+        self.main_box.add(self.canvas)
+        self.main_box.add(self.status_label)
+        self.main_box.add(controls)
 
         asyncio.get_event_loop().create_task(self.game_loop())
 
@@ -67,25 +46,14 @@ class SnakeGame(toga.App):
         while True:
             await asyncio.sleep(0.2)
             if self.running:
-                self.cnt += 1;
-                print("game loop - entry" + str(self.cnt))
                 self.update_game()
-                print("game loop - out" + str(self.cnt))
 
-    def pinta_cabeza(self, cabeza: Cabeza):
+    def draw_game(self):
         with self.canvas.context.Fill(color="red") as fill:
-            circle = fill.arc(cabeza._posicion_x, cabeza._posicion_y, cabeza.diametro_cabeza)
-            self.canvas.redraw()
+            for x, y in self.snake:
+                fill.rect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE)
+        self.canvas.redraw()
 
-    def pinta_serpiente(self, serpiente: Serpiente):
-        self.pinta_cabeza(serpiente.cabeza)
-        if serpiente.cola != None: 
-            self.pinta_serpiente(serpiente.cola)
-
-
-    def draw_game(self, canvas, context):
-        self.pinta_serpiente (SnakeGame.serpiente)
-        
     def random_food(self):
         while True:
             food = (random.randint(0, GRID_WIDTH - 1), random.randint(0, GRID_HEIGHT - 1))
@@ -98,16 +66,12 @@ class SnakeGame(toga.App):
 
         head_x, head_y = self.snake[0]
         if self.direction == "UP":
-            print("UP")
             head_y -= 1
         elif self.direction == "DOWN":
-            print("DOWN")
             head_y += 1
         elif self.direction == "LEFT":
-            print("LEFT")
             head_x -= 1
         elif self.direction == "RIGHT":
-            print("RIGHT")
             head_x += 1
 
         new_head = (head_x, head_y)
@@ -123,7 +87,7 @@ class SnakeGame(toga.App):
         else:
             self.snake.pop()
 
-        self.draw_game(self.canvas, self.canvas.context)
+        self.draw_game()
 
     def restart_game(self, widget):
         self.snake = [(5, 5), (4, 5), (3, 5)]
@@ -131,8 +95,7 @@ class SnakeGame(toga.App):
         self.direction = "RIGHT"
         self.running = True
         self.status_label.text = "Playing..."
-        #self.canvas.redraw()
-        self.draw_game(self.canvas, self.canvas.context)
+        self.draw_game()
 
     def move_up(self, widget):
         if self.direction != "DOWN":
@@ -149,3 +112,8 @@ class SnakeGame(toga.App):
     def move_right(self, widget):
         if self.direction != "LEFT":
             self.direction = "RIGHT"
+
+
+def crea_box_de_juego():
+    return GPT_JuegoSerpiente().main_box
+

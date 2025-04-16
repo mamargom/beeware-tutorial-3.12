@@ -3,15 +3,15 @@ from toga import Canvas
 from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 
-from math import radians, cos, sin
+from .helpers.support import *
+
+from time import sleep
+import asyncio
 
 
 class JuegoRecursionArbol(toga.App):
 
-    
-    DERECHA   = 45  #grados
-    IZQUIERDA = 135 #grados
-    ARRIBA    = 90   #grados
+    MAX_NUM_ALTURAS = 7
 
 
     _instancia = None
@@ -55,10 +55,8 @@ class JuegoRecursionArbol(toga.App):
         self.canvas.redraw()
 
     def restart_game(self, widget):
-        self.pinta_linea_simple(self.x_inicio, self.y_inicio, self.ARRIBA, 100)
-        self.pinta_linea_simple(self.x_inicio, self.y_inicio, self.DERECHA, 100)
-        self.pinta_linea_simple(self.x_inicio, self.y_inicio, self.IZQUIERDA, 100)
-
+        
+        asyncio.ensure_future(self.recorre_arbol(self.x_inicio, self.y_inicio, -90, 100, 0))
         self.canvas.redraw()
 
 
@@ -66,32 +64,54 @@ class JuegoRecursionArbol(toga.App):
     # métodos para pintar el árbol #
     ################################
 
-    def punto_destino_del_arbol(self, x, y, angulo_grados, distancia):
-
-        angulo_rad = radians(angulo_grados)
-        x_dest = x + distancia * cos(angulo_rad)
-        y_dest = y + distancia * sin(angulo_rad)  # Positivo hacia abajo en canvas
-        return x_dest, y_dest
-
-    def punto_inicial(self):
-        self.canvas.on_resize
+    
 
     def cambiar_punto_inicio(self, canvas, width, height):
         print(f"Tamaño del canvas: {width}x{height}")
+        
 
         # Punto de inicio: centro del borde inferior
         self.x_inicio = width / 2
         self.y_inicio = height
 
-    def pinta_linea_simple(self, x_inicio, y_inicio, angulo, longitud):
-        # Punto destino: hacia arriba en ángulo 135° (45° arriba a la izquierda)
-        angulo_rad = radians(angulo)
-        x_fin = x_inicio + longitud * cos(angulo_rad)
-        y_fin = y_inicio - longitud * sin(angulo_rad)
 
-        with self.canvas.Stroke('blue', line_width=5) as s:
+    async def recorre_arbol(self, x_inicio, y_inicio, angulo, longitud, numero_de_alturas):
+
+        #print(f"recorre_arbol: nivel:{numero_de_alturas} long{longitud}: ang {angulo}")
+        #print(f"       posic1:{x_inicio},{y_inicio} posic2{destino_del_tronco(x_inicio, y_inicio, angulo, longitud)}")
+        await asyncio.sleep(0.5)
+        self.canvas.window.content.refresh()
+
+        if (numero_de_alturas == JuegoRecursionArbol.MAX_NUM_ALTURAS):
+            return
+        elif (numero_de_alturas < JuegoRecursionArbol.MAX_NUM_ALTURAS / 3):
+            x,y = self.pinta_tronco(x_inicio, y_inicio, angulo, longitud) 
+            await self.recorre_arbol(x, y, angulo, longitud-10, numero_de_alturas+1)
+        else:
+            # recto
+            x,y = self.pinta_tronco(x_inicio, y_inicio, angulo, longitud) 
+            await self.recorre_arbol(x, y, angulo, longitud-10, numero_de_alturas+1)
+            # dcha
+            x,y = self.pinta_tronco(x_inicio, y_inicio, rotar_derecha(angulo), longitud) 
+            await self.recorre_arbol(x, y, rotar_derecha(angulo), longitud-10, numero_de_alturas+1)
+            # dcha
+            x,y = self.pinta_tronco(x_inicio, y_inicio, rotar_izquierda(angulo), longitud) 
+            await self.recorre_arbol(x, y, rotar_izquierda(angulo), longitud-10, numero_de_alturas+1)
+        
+        
+
+
+
+    def pinta_tronco(self, x_inicio, y_inicio, angulo, longitud):
+        
+        x_fin, y_fin = destino_del_tronco(x_inicio, y_inicio, angulo, longitud)
+
+        with self.canvas.Stroke('blue', line_width=longitud/10) as s:
             s.move_to(x_inicio, y_inicio)
             s.line_to(x_fin, y_fin)
+        
+        self.canvas.redraw()
+        return x_fin, y_fin
 
 
 def crea_box_de_juego():

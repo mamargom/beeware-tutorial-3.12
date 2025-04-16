@@ -1,5 +1,11 @@
-from math import radians, cos, sin
+from math import radians, cos, sin, log, exp
 
+
+
+
+def reduce_grosor(nivel, max_grosor=50, k=0.5):
+    print(f"grosor: {max_grosor}*{exp(-k * nivel)} = {max_grosor * exp(-k * nivel)}")
+    return max_grosor * exp(-k * nivel)
 
 def rotar_angulo(angulo_actual, paso):
     return (angulo_actual + paso) % 360

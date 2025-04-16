@@ -13,7 +13,24 @@ GRID_HEIGHT = 20
 
 
 class JuegoSerpiente(toga.App):
-    
+
+    _instancia = None
+    _permitir_instanciacion = False
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._permitir_instanciacion:
+            raise Exception("Usa 'obtenerInstanciaSingleton()' para obtener la instancia.")
+        return super().__new__(cls)
+
+    @classmethod
+    def obtenerInstanciaSingleton(cls):
+        if cls._instancia is None:
+            cls._permitir_instanciacion = True
+            cls._instancia = cls()
+            cls._permitir_instanciacion = False
+        return cls._instancia
+
+
     def __init__(self):
 
         self.serpiente = Serpiente(5)
@@ -25,7 +42,7 @@ class JuegoSerpiente(toga.App):
 
         self.canvas = toga.Canvas(style=Pack(flex=1, background_color="white"))
         self.status_label = toga.Label("Playing...", style=Pack(padding=5))
-        
+
         btn_up = toga.Button("↑", on_press=self.move_up, style=Pack(width=40, height=40))
         btn_down = toga.Button("↓", on_press=self.move_down, style=Pack(width=40, height=40))
         btn_left = toga.Button("←", on_press=self.move_left, style=Pack(width=40, height=40))
@@ -58,7 +75,6 @@ class JuegoSerpiente(toga.App):
 
     def draw_game(self, canvas, context):
         self.serpiente.pintate(canvas)
-        #self.comida.pintate(canvas)
         self.canvas.redraw()
         
 
@@ -92,6 +108,9 @@ class JuegoSerpiente(toga.App):
         self.running = True
         self.status_label.text = "Playing..."
 
+    def stop_game(self):
+        self.running = False
+
     def move_up(self, widget):
         if self.direction != "DOWN":
             self.direction = "UP"
@@ -109,4 +128,4 @@ class JuegoSerpiente(toga.App):
             self.direction = "RIGHT"
 
 def crea_box_de_juego():
-    return JuegoSerpiente().main_box
+    return JuegoSerpiente.obtenerInstanciaSingleton().main_box

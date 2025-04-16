@@ -5,17 +5,20 @@ from toga.window import Window, WindowSet
 import importlib
 
 from helloworld.juegos.serpiente import juego_serpiente, gpt_juego_serpiente
+from helloworld.juegos.reflejos import juego_reflejos 
 
 class GameSelector(toga.App):
     def startup(self):
 
         self.main_window = Window("elige un juego")
         self.selection_box = toga.Box(style=Pack(direction=COLUMN, padding=10))
+
+        self.running = False
         
         self.juegos = {
             #"Serpiente": "helloworld.juegos.serpiente.juego_serpiente",  # Nombre del módulo Python
             "Serpiente": lambda : juego_serpiente.crea_box_de_juego(),
-            "Reflejos":  lambda : gpt_juego_serpiente.crea_box_de_juego(),  
+            "Reflejos":  lambda : juego_reflejos.crea_box_de_juego(),  
         }
         
         for nombre_del_juego, box_de_juego in self.juegos.items():
@@ -35,6 +38,7 @@ class GameSelector(toga.App):
         if self.main_window.content == self.selection_box:
             self.app.exit()
         else:
+            #self.app.main_window.content.stop_game()
             self.carga_un_juego("elige un juego", self.selection_box)
         
 

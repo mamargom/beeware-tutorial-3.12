@@ -6,6 +6,7 @@ import importlib
 
 from helloworld.juegos.serpiente import juego_serpiente, gpt_juego_serpiente
 from helloworld.juegos.reflejos import juego_reflejos 
+from helloworld.juegos.recursion.arbol import juego_arbol
 
 class GameSelector(toga.App):
     def startup(self):
@@ -18,7 +19,8 @@ class GameSelector(toga.App):
         self.juegos = {
             #"Serpiente": "helloworld.juegos.serpiente.juego_serpiente",  # Nombre del módulo Python
             "Serpiente": lambda : juego_serpiente.crea_box_de_juego(),
-            "Reflejos":  lambda : juego_reflejos.crea_box_de_juego(),  
+            "Arbol"    : lambda : juego_arbol.crea_box_de_juego(),
+            "Reflejos" : lambda : juego_reflejos.crea_box_de_juego(),  
         }
         
         for nombre_del_juego, box_de_juego in self.juegos.items():

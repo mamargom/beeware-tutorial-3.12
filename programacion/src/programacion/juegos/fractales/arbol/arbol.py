@@ -60,8 +60,8 @@ class Rama(Arbol):
             return Posicion(x_dest, y_dest)
     
     def calcula_longitud(self, nivel):
-         longitud = Rama.LONG_MAX - (Arbol.NUM_ALTURAS - nivel) * 5
-         return longitud
+        longitud = Rama.LONG_MAX - (Arbol.NUM_ALTURAS - nivel) * 5
+        return longitud
 
 
     def pintate(self, canvas: Canvas):
@@ -82,31 +82,4 @@ class Hoja:
         with canvas.Fill(color='GREEN') as fill:
             fill.arc(self.posicion.posicion_x, self.posicion.posicion_y,self.grosor )
         canvas.redraw()
-
-
-#####
-
-async def crea_arbol(rama:Rama, canvas, numero_alturas):
-
-# tengo que pasar el objeto de la velocidad (slider) => Pasar la funcion crea_arbol a juego_arbol.py   
-#    if (self.velocidad >0):
-    await asyncio.sleep(0.1)
-    canvas.window.content.refresh()
-
-    rama.nivel = numero_alturas
-    rama.pintate(canvas)
-    
-    if (numero_alturas == 0):
-        rama.hoja = Hoja(rama.posicion_final)
-        rama.hoja.pintate(canvas)
-    elif (numero_alturas > Arbol.NUM_ALTURAS - 2):
-        rama.rama_centro = await crea_arbol(Rama(rama.direccion, rama.posicion_final, numero_alturas-1), canvas, numero_alturas - 1)
-    else:
-        rama.rama_centro = await crea_arbol(Rama(rama.direccion, rama.posicion_final, numero_alturas-1), canvas, numero_alturas - 1)
-        rama.rama_derecha = await crea_arbol(Rama(rotar_derecha(rama.direccion), rama.posicion_final, numero_alturas-1), canvas, numero_alturas - 1)
-        rama.rama_izquierda = await crea_arbol(Rama(rotar_izquierda(rama.direccion), rama.posicion_final, numero_alturas-1), canvas, numero_alturas - 1)
-    
-    return rama 
-
-    
 

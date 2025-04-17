@@ -2,21 +2,16 @@ import toga
 from toga import Canvas
 from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
-from math import log10
-
-from .helpers.support import *
-
-
 import asyncio
 
+from .helpers.support import *
+from .arbol import Arbol, Rama, Hoja, Posicion, crea_arbol
 
 
 class JuegoRecursionArbol(toga.App):
 
-    MAX_NUM_ALTURAS = 8
+    MAX_NUM_ALTURAS = 3
     MAX_GROSOR = 100
-
-    
 
     _instancia = None
     _permitir_instanciacion = False
@@ -36,19 +31,17 @@ class JuegoRecursionArbol(toga.App):
 
     
     def __init__(self):
-
-        self.velocidad = 0
         
-        self.x_inicio = 0
-        self.y_inicio = 0
+        self.posicion_inicial = Posicion(0,0)
+        self.velocidad = 0
 
         self.running = True
         self.canvas = toga.Canvas(style=Pack(flex=1, background_color="white"))
         self.canvas.on_resize = self.cambiar_punto_inicio
         self.status_label = toga.Label("Jugando...", style=Pack(padding=5))
 
-        btn_restart = toga.Button("Restart", on_press=self.restart_game, style=Pack(width=80, height=40))
-        slider = toga.Slider("velocidad", min=0, max=1, on_release=self.muestra_velocidad)
+        btn_restart = toga.Button("Pinta ! ", on_press=self.restart_game, style=Pack(width=80, height=40))
+        slider = toga.Slider("velocidad", value=0, min=0, max=1, on_release=self.muestra_velocidad)
         pre_recursion = toga.Switch("pinta_antes", value = True)
         controls = toga.Box(style=Pack(direction=ROW))
         controls.add(slider)
@@ -61,6 +54,8 @@ class JuegoRecursionArbol(toga.App):
         self.main_box.add(self.status_label)
         self.main_box.add(controls)
 
+        self.arbol = None
+
         self.canvas.redraw()
 
     def muestra_velocidad(self, widget):
@@ -70,9 +65,16 @@ class JuegoRecursionArbol(toga.App):
 
     def restart_game(self, widget):
         
+        nivel = Arbol.NUM_ALTURAS
         asyncio.get_event_loop().create_task(
-            self.recorre_arbol(self.x_inicio, self.y_inicio, -90, JuegoRecursionArbol.MAX_GROSOR, 0))
+            crea_arbol(Rama(Rama.HACIA_ARRIBA, self.posicion_inicial, nivel), self.canvas, nivel))
+
+#        asyncio.get_event_loop().create_task(
+#            self.recorre_arbol(self.posicion_inicial.posicion_x,self.posicion_inicial.posicion_y, 
+#                                -90, JuegoRecursionArbol.MAX_GROSOR, 0)
+#                                )
         self.canvas.redraw()
+        return
 
 
     ################################
@@ -84,8 +86,8 @@ class JuegoRecursionArbol(toga.App):
         
 
         # Punto de inicio: centro del borde inferior
-        self.x_inicio = width / 2
-        self.y_inicio = height
+        self.posicion_inicial.posicion_x = width / 2
+        self.posicion_inicial.posicion_y = height
 
 
     async def recorre_arbol(self, x_inicio, y_inicio, angulo, longitud, numero_de_alturas):
@@ -126,7 +128,7 @@ class JuegoRecursionArbol(toga.App):
 
     def pinta_hoja(self, x_inicio, y_inicio):
 
-        with self.canvas.fill(color='GREEN') as fill:
+        with self.canvas.Fillill(color='GREEN') as fill:
             fill.arc(x_inicio, y_inicio, 5)
 
         self.canvas.redraw()

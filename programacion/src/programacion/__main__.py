@@ -1,4 +1,4 @@
-from helloworld.app import GameSelector
+from programacion.app import GameSelector
 
 
 if __name__ == "__main__":

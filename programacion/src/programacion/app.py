@@ -4,9 +4,9 @@ from toga.style.pack import COLUMN
 from toga.window import Window, WindowSet
 import importlib
 
-from helloworld.juegos.serpiente import juego_serpiente, gpt_juego_serpiente
-from helloworld.juegos.reflejos import juego_reflejos 
-from helloworld.juegos.recursion.arbol import juego_arbol
+from programacion.juegos.serpiente import juego_serpiente, gpt_juego_serpiente
+from programacion.juegos.reflejos import juego_reflejos 
+from programacion.juegos.recursion.arbol import juego_arbol
 
 class GameSelector(toga.App):
     def startup(self):

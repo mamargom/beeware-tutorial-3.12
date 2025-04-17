@@ -16,7 +16,7 @@ class JuegoRecursionArbol(toga.App):
     MAX_NUM_ALTURAS = 8
     MAX_GROSOR = 100
 
-    TIEMPO_ESPERA = 0.001
+    
 
     _instancia = None
     _permitir_instanciacion = False
@@ -37,6 +37,8 @@ class JuegoRecursionArbol(toga.App):
     
     def __init__(self):
 
+        self.velocidad = 0
+        
         self.x_inicio = 0
         self.y_inicio = 0
 
@@ -46,8 +48,11 @@ class JuegoRecursionArbol(toga.App):
         self.status_label = toga.Label("Jugando...", style=Pack(padding=5))
 
         btn_restart = toga.Button("Restart", on_press=self.restart_game, style=Pack(width=80, height=40))
-
+        slider = toga.Slider("velocidad", min=0, max=1, on_release=self.muestra_velocidad)
+        pre_recursion = toga.Switch("pinta_antes", value = True)
         controls = toga.Box(style=Pack(direction=ROW))
+        controls.add(slider)
+        controls.add(pre_recursion)
         controls.add(btn_restart)
 
 
@@ -57,6 +62,11 @@ class JuegoRecursionArbol(toga.App):
         self.main_box.add(controls)
 
         self.canvas.redraw()
+
+    def muestra_velocidad(self, widget):
+        self.status_label.text = widget.value
+        self.velocidad = widget.value
+
 
     def restart_game(self, widget):
         
@@ -82,7 +92,8 @@ class JuegoRecursionArbol(toga.App):
 
         #print(f"recorre_arbol: nivel:{numero_de_alturas} long{longitud}: ang {angulo}")
         #print(f"       posic1:{x_inicio},{y_inicio} posic2{destino_del_tronco(x_inicio, y_inicio, angulo, longitud)}")
-        await asyncio.sleep(JuegoRecursionArbol.TIEMPO_ESPERA)
+        if (self.velocidad >0):
+            await asyncio.sleep(self.velocidad)
         self.canvas.window.content.refresh()
 
         if (numero_de_alturas == JuegoRecursionArbol.MAX_NUM_ALTURAS):

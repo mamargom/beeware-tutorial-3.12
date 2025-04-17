@@ -1,4 +1,4 @@
-from helloworld.app import SnakeGame
+from programacion.app import SnakeGame
 
 
 if __name__ == "__main__":

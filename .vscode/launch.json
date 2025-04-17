@@ -8,7 +8,7 @@
             "name": "Beeware Debugger: Module",
             "type": "debugpy",
             "request": "launch",
-            "cwd": "${workspaceFolder}/helloworld",
+            "cwd": "${workspaceFolder}/programacion",
             "module": "briefcase",
             "args": [
                 "dev",

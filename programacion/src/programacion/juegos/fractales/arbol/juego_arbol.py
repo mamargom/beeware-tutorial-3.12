@@ -68,14 +68,18 @@ class JuegoRecursionArbol(toga.App):
         with self.canvas.Fill(color="WHITE") as fill:
             fill.rect(0,0,self.tamano_canvas[0],self.tamano_canvas[1])
 
-    def restart_game(self, widget):
+    async def restart_game(self, widget):
 
         self.limpia_canvas()
         nivel = Arbol.NUM_ALTURAS
+
+        self.arbol = self.fabrica_arbol(Rama(Rama.HACIA_ARRIBA, self.posicion_inicial, nivel), self.canvas, nivel)
+
         asyncio.get_event_loop().create_task(
             self.crea_arbol(Rama(Rama.HACIA_ARRIBA, self.posicion_inicial, nivel), self.canvas, nivel))
+        
 #        asyncio.get_event_loop().create_task(
-#            self.recorre_arbol(self.posicion_inicial.posicion_x,self.posicion_inicial.posicion_y, 
+#            self.pinta_arbol(self.posicion_inicial.posicion_x,self.posicion_inicial.posicion_y, 
 #                                -90, JuegoRecursionArbol.MAX_GROSOR, 0)
 #                                )
         self.canvas.redraw()
@@ -95,6 +99,24 @@ class JuegoRecursionArbol(toga.App):
 
         self.tamano_canvas = (width, height)
 
+    # recorre usando la estructura
+    def fabrica_arbol(self, rama:Rama, numero_alturas):
+
+
+        rama.nivel = numero_alturas
+        
+        if (numero_alturas == 0):
+            rama.hoja = Hoja(rama.posicion_final)
+
+        elif (numero_alturas > Arbol.NUM_ALTURAS - 2):
+            rama.rama_centro = self.fabrica_arbol(Rama(rama.direccion, rama.posicion_final, numero_alturas-1), numero_alturas - 1)
+        else:
+            rama.rama_centro = self.fabrica_arbol(Rama(rama.direccion, rama.posicion_final, numero_alturas-1),  numero_alturas - 1)
+            rama.rama_derecha = self.fabrica_arbol(Rama(rotar_derecha(rama.direccion), rama.posicion_final, numero_alturas-1), numero_alturas - 1)
+            rama.rama_izquierda = self.fabrica_arbol(Rama(rotar_izquierda(rama.direccion), rama.posicion_final, numero_alturas-1), numero_alturas - 1)
+
+
+        return rama 
 
     # recorre usando la estructura
     async def crea_arbol(self, rama:Rama, canvas, numero_alturas):
@@ -124,34 +146,8 @@ class JuegoRecursionArbol(toga.App):
 
         return rama 
 
-
-
-    async def recorre_arbol(self, x_inicio, y_inicio, angulo, longitud, numero_de_alturas):
-
-        #print(f"recorre_arbol: nivel:{numero_de_alturas} long{longitud}: ang {angulo}")
-        #print(f"       posic1:{x_inicio},{y_inicio} posic2{destino_del_tronco(x_inicio, y_inicio, angulo, longitud)}")
-        if (self.velocidad >0):
-            await asyncio.sleep(self.velocidad)
-        self.canvas.window.content.refresh()
-
-        if (numero_de_alturas == JuegoRecursionArbol.MAX_NUM_ALTURAS):
-            self.pinta_hoja(x_inicio, y_inicio)
-        elif (numero_de_alturas < JuegoRecursionArbol.MAX_NUM_ALTURAS / 3):
-            x,y = self.pinta_tronco(x_inicio, y_inicio, angulo, longitud, numero_de_alturas) 
-            await self.recorre_arbol(x, y, angulo, longitud-10, numero_de_alturas+1)
-        else:
-            # recto
-            x,y = self.pinta_tronco(x_inicio, y_inicio, angulo, longitud, numero_de_alturas) 
-            await self.recorre_arbol(x, y, angulo, longitud-10, numero_de_alturas+1)
-            # dcha
-            x,y = self.pinta_tronco(x_inicio, y_inicio, rotar_derecha(angulo), longitud, numero_de_alturas) 
-            await self.recorre_arbol(x, y, rotar_derecha(angulo), longitud-10, numero_de_alturas+1)
-            # dcha
-            x,y = self.pinta_tronco(x_inicio, y_inicio, rotar_izquierda(angulo), longitud, numero_de_alturas) 
-            await self.recorre_arbol(x, y, rotar_izquierda(angulo), longitud-10, numero_de_alturas+1)
-        
-        
-    def pinta_tronco(self, x_inicio, y_inicio, angulo, longitud, nivel):
+    
+    def pinta_rama(self, x_inicio, y_inicio, angulo, longitud, nivel):
 
         x_fin, y_fin = destino_del_tronco(x_inicio, y_inicio, angulo, longitud)
         with self.canvas.Stroke('blue', line_width=reduce_grosor(nivel, JuegoRecursionArbol.MAX_GROSOR)) as s:

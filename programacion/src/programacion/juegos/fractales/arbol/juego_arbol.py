@@ -3,15 +3,15 @@ from toga import Canvas
 from toga.style import Pack
 from toga.style.pack import COLUMN, ROW
 import asyncio
+import time
 
 from .helpers.support import *
 from .arbol import Arbol, Rama, Hoja, Posicion
+ 
 
 
 class JuegoRecursionArbol(toga.App):
 
-    MAX_NUM_ALTURAS = 3
-    MAX_GROSOR = 100
 
     _instancia = None
     _permitir_instanciacion = False
@@ -32,19 +32,30 @@ class JuegoRecursionArbol(toga.App):
     
     def __init__(self):
         
-        self.posicion_inicial = Posicion(0,0)
         self.velocidad = 0
 
         self.running = True
         
 
         btn_restart = toga.Button("Pinta ! ", on_press=self.restart_game, style=Pack(width=80, height=40))
-        self.slider_velocidad = toga.Slider("velocidad", value=0, min=0, max=1, on_release=self.muestra_velocidad)
+        self.slider_velocidad = toga.Slider("velocidad", value=0, min=0, max=0.5, on_release=self.muestra_velocidad)
         self.pre_recursion = toga.Switch("pinta_antes", value = True)
+        self.slider_r = toga.Slider("r", value=0.8, min=0.4, max=0.9, on_release=self.muestra_velocidad)
+        self.slider_L0 = toga.Slider("L0", value=0.2, min=0.1, max=0.3, on_release=self.muestra_velocidad)
+        self.slider_hoja_ratio = toga.Slider("slider_hoja_ratio", value=0.05, min=0, max=0.3, on_release=self.muestra_velocidad)
         controls = toga.Box(style=Pack(direction=ROW))
+        controls.add(toga.Label("speed: "))
         controls.add(self.slider_velocidad)
+        controls.add(toga.Label("r: "))
+        controls.add(self.slider_r)
+        controls.add(toga.Label("L0: "))
+        controls.add(self.slider_L0)
+        controls.add(toga.Label("Hoja: "))
+        controls.add(self.slider_hoja_ratio)
+        
         controls.add(self.pre_recursion)
         controls.add(btn_restart)
+
 
         self.canvas = toga.Canvas(style=Pack(flex=1, background_color="white"))
         self.canvas.on_resize = self.cambiar_punto_inicio
@@ -62,6 +73,9 @@ class JuegoRecursionArbol(toga.App):
 
     def muestra_velocidad(self, widget):
         self.status_label.text = widget.value
+    
+    def muestra_r(self, widget):
+        self.status_label.text = widget.value
 
 
     def limpia_canvas(self):
@@ -71,99 +85,65 @@ class JuegoRecursionArbol(toga.App):
     async def restart_game(self, widget):
 
         self.limpia_canvas()
-        nivel = Arbol.NUM_ALTURAS
+    
+        #inicia propiedades del árbol
+        # r cambia ratio reduccion de grosor
+        # L0 ratio de tamano tronco
+        # hoja_ratio ratio tamano de hoja
+        Arbol.MAX_TAMANO = self.tamano_canvas[1]
+        Arbol.DIMENSIONES = calcula_dimensiones_de_nivel(Arbol.MAX_TAMANO, 
+                                                        self.slider_r.value, #ok=0.8
+                                                        self.slider_L0.value, #ok=0.3
+                                                        self.slider_hoja_ratio.value, #ok=0.05
+                                                        max_niveles=8) #ok=8
+        Arbol.ALTURAS = len(Arbol.DIMENSIONES) - 1
+        Arbol.CANVAS = self.canvas
 
-        self.arbol = self.fabrica_arbol(Rama(Rama.HACIA_ARRIBA, self.posicion_inicial, nivel), self.canvas, nivel)
+        for (long,grosor) in Arbol.DIMENSIONES:
+            print(f"Tamaño ramas: {long}x{grosor}")
 
-        asyncio.get_event_loop().create_task(
-            self.crea_arbol(Rama(Rama.HACIA_ARRIBA, self.posicion_inicial, nivel), self.canvas, nivel))
-        
-#        asyncio.get_event_loop().create_task(
-#            self.pinta_arbol(self.posicion_inicial.posicion_x,self.posicion_inicial.posicion_y, 
-#                                -90, JuegoRecursionArbol.MAX_GROSOR, 0)
-#                                )
+
+        asyncio.get_event_loop().create_task(self.pinta_arbol(Arbol.POSICION_RAIZ, Rama.HACIA_ARRIBA, Arbol.ALTURAS))
+#        pinta_arbol_sync (Arbol.POSICION_RAIZ, Rama.HACIA_ARRIBA, Arbol.ALTURAS)
+
         self.canvas.redraw()
+
         return
 
 
-    ################################
-    # métodos para pintar el árbol #
-    ################################
+    # recorre usando la estructura
+    async def pinta_arbol(self, posicion, direccion, altura):
+
+        if self.slider_velocidad.value > 0:
+            await asyncio.sleep(self.slider_velocidad.value)
+
+        nueva_posicion = mueve_arbol(posicion, direccion, altura)
+
+        if (self.pre_recursion.value):
+            pinta_rama(posicion, direccion, altura)
+        
+        if (altura == 0):
+            pinta_hoja(nueva_posicion)
+        elif (altura > Arbol.ALTURAS - 1):
+            await self.pinta_arbol(nueva_posicion, direccion, altura-1)
+        else:
+            await self.pinta_arbol(nueva_posicion, direccion, altura-1)
+            await self.pinta_arbol(nueva_posicion, rotar_derecha(direccion), altura-1)
+            await self.pinta_arbol(nueva_posicion, rotar_izquierda(direccion), altura-1)
+        
+        if (not self.pre_recursion.value):
+            pinta_rama(posicion, direccion, altura)
+
+
 
     def cambiar_punto_inicio(self, canvas, width, height):
         print(f"Tamaño del canvas: {width}x{height}")
         
         # Punto de inicio: centro del borde inferior
-        self.posicion_inicial.posicion_x = width / 2
-        self.posicion_inicial.posicion_y = height
+        Arbol.POSICION_RAIZ.posicion_x = width / 2
+        Arbol.POSICION_RAIZ.posicion_y = height
 
         self.tamano_canvas = (width, height)
-
-    # recorre usando la estructura
-    def fabrica_arbol(self, rama:Rama, numero_alturas):
-
-
-        rama.nivel = numero_alturas
-        
-        if (numero_alturas == 0):
-            rama.hoja = Hoja(rama.posicion_final)
-
-        elif (numero_alturas > Arbol.NUM_ALTURAS - 2):
-            rama.rama_centro = self.fabrica_arbol(Rama(rama.direccion, rama.posicion_final, numero_alturas-1), numero_alturas - 1)
-        else:
-            rama.rama_centro = self.fabrica_arbol(Rama(rama.direccion, rama.posicion_final, numero_alturas-1),  numero_alturas - 1)
-            rama.rama_derecha = self.fabrica_arbol(Rama(rotar_derecha(rama.direccion), rama.posicion_final, numero_alturas-1), numero_alturas - 1)
-            rama.rama_izquierda = self.fabrica_arbol(Rama(rotar_izquierda(rama.direccion), rama.posicion_final, numero_alturas-1), numero_alturas - 1)
-
-
-        return rama 
-
-    # recorre usando la estructura
-    async def crea_arbol(self, rama:Rama, canvas, numero_alturas):
-
-    # tengo que pasar el objeto de la velocidad (slider) => Pasar la funcion crea_arbol a juego_arbol.py   
-        if (self.slider_velocidad.value >0):
-            await asyncio.sleep(self.slider_velocidad.value)
-        canvas.window.content.refresh()
-
-        rama.nivel = numero_alturas
-        if (self.pre_recursion.value):
-            rama.pintate(canvas)
-        
-        if (numero_alturas == 0):
-            rama.hoja = Hoja(rama.posicion_final)
-            rama.hoja.pintate(canvas)
-        elif (numero_alturas > Arbol.NUM_ALTURAS - 2):
-            rama.rama_centro = await self.crea_arbol(Rama(rama.direccion, rama.posicion_final, numero_alturas-1), canvas, numero_alturas - 1)
-        else:
-            rama.rama_centro = await self.crea_arbol(Rama(rama.direccion, rama.posicion_final, numero_alturas-1), canvas, numero_alturas - 1)
-            rama.rama_derecha = await self.crea_arbol(Rama(rotar_derecha(rama.direccion), rama.posicion_final, numero_alturas-1), canvas, numero_alturas - 1)
-            rama.rama_izquierda = await self.crea_arbol(Rama(rotar_izquierda(rama.direccion), rama.posicion_final, numero_alturas-1), canvas, numero_alturas - 1)
-        
-        
-        if (not self.pre_recursion.value):
-            rama.pintate(canvas)
-
-        return rama 
-
-    
-    def pinta_rama(self, x_inicio, y_inicio, angulo, longitud, nivel):
-
-        x_fin, y_fin = destino_del_tronco(x_inicio, y_inicio, angulo, longitud)
-        with self.canvas.Stroke('blue', line_width=reduce_grosor(nivel, JuegoRecursionArbol.MAX_GROSOR)) as s:
-            s.move_to(x_inicio, y_inicio)
-            s.line_to(x_fin, y_fin)
-        
-        self.canvas.redraw()
-        return x_fin, y_fin 
-    
-
-    def pinta_hoja(self, x_inicio, y_inicio):
-
-        with self.canvas.Fillill(color='GREEN') as fill:
-            fill.arc(x_inicio, y_inicio, 5)
-
-        self.canvas.redraw()
 
 
 

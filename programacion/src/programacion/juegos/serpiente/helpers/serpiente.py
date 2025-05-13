@@ -35,15 +35,15 @@ class Serpiente():
             posicion_cabeza = self.cabeza.dime_posicion()
             self.cabeza.mueve_a_posicion(posicion_x,posicion_y)
             self.cola.mueve_a_posicion(*posicion_cabeza)
-        
+
     def mueve_a_derecha(self):
-        self.mueve_a_posicion(self.cabeza._posicion_x + Serpiente._DIAMETRO_CABEZA, self.cabeza._posicion_y)
+        self.mueve_a_posicion(*self.cabeza.posic_dcha())
     def mueve_a_izquierda(self):
-        self.mueve_a_posicion(self.cabeza._posicion_x - Serpiente._DIAMETRO_CABEZA, self.cabeza._posicion_y)
+        self.mueve_a_posicion(*self.cabeza.posic_izqa())
     def mueve_arriba(self):
-        self.mueve_a_posicion(self.cabeza._posicion_x, self.cabeza._posicion_y - Serpiente._DIAMETRO_CABEZA)
+        self.mueve_a_posicion(*self.cabeza.posic_arriba())
     def mueve_abajo(self):
-        self.mueve_a_posicion(self.cabeza._posicion_x, self.cabeza._posicion_y + Serpiente._DIAMETRO_CABEZA)
+        self.mueve_a_posicion(*self.cabeza.posic_abajo())
 
     def pintate(self, canvas, color="red"):
         self.cabeza.pintate(canvas, color)
@@ -57,6 +57,34 @@ class Cabeza():
         def __init__(self,posicion_x, posicion_y):
             self.mueve_a_posicion(posicion_x,posicion_y)
             self.diametro_cabeza = Serpiente._DIAMETRO_CABEZA;
+
+        def mueve_a_dcha(self):
+            self.mueve_a_posicion(*self.posic_dcha())
+
+        def posic_dcha(self):
+            posicion_actual = self.dime_posicion()
+            return (posicion_actual[0] + self.diametro_cabeza, posicion_actual[1])
+        
+        def mueve_a_izqa(self):
+            self.mueve_a_posicion(*self.posic_izqa())
+
+        def posic_izqa(self):
+            posicion_actual = self.dime_posicion()
+            return (posicion_actual[0] - self.diametro_cabeza, posicion_actual[1])        
+
+        def mueve_arriba(self):
+            self.mueve_a_posicion(*self.posic_arriba())
+
+        def posic_arriba(self):
+            posicion_actual = self.dime_posicion()
+            return (posicion_actual[0], posicion_actual[1] - self.diametro_cabeza)        
+
+        def mueve_abajo(self):
+            self.mueve_a_posicion(*self.posic_abajo())
+
+        def posic_abajo(self):
+            posicion_actual = self.dime_posicion()
+            return (posicion_actual[0], posicion_actual[1] + self.diametro_cabeza)  
 
         def mueve_a_posicion(self, x, y):
             self._posicion_x = x

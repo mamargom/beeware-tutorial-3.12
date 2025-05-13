@@ -35,9 +35,12 @@ class JuegoRecursionArbol(toga.App):
         self.velocidad = 0
 
         self.running = True
+
+        self.gameTask = None
         
 
-        btn_restart = toga.Button("Pinta ! ", on_press=self.restart_game, style=Pack(width=80, height=40))
+#        btn_restart = toga.Button("Pinta ! ", on_press=self.restart_game, style=Pack(width=80, height=40))
+        btn_restart = toga.Button("Pinta !", on_press=lambda w: asyncio.create_task(self.restart_game(w)))
         self.slider_velocidad = toga.Slider("velocidad", value=0, min=0, max=0.5, on_release=self.muestra_velocidad)
         self.pre_recursion = toga.Switch("pinta_antes", value = True)
         self.slider_r = toga.Slider("r", value=0.8, min=0.4, max=0.9, on_release=self.muestra_velocidad)
@@ -84,8 +87,12 @@ class JuegoRecursionArbol(toga.App):
 
     async def restart_game(self, widget):
 
-        self.limpia_canvas()
-    
+        if self.gameTask and not self.gameTask.done():
+            print("Cancelando tarea anterior no cerrada...")
+            self.gameTask.cancel()
+
+        self.limpia_canvas()    
+
         #inicia propiedades del árbol
         # r cambia ratio reduccion de grosor
         # L0 ratio de tamano tronco
@@ -103,13 +110,11 @@ class JuegoRecursionArbol(toga.App):
             print(f"Tamaño ramas: {long}x{grosor}")
 
 
-        asyncio.get_event_loop().create_task(self.pinta_arbol(Arbol.POSICION_RAIZ, Rama.HACIA_ARRIBA, Arbol.ALTURAS))
-#        pinta_arbol_sync (Arbol.POSICION_RAIZ, Rama.HACIA_ARRIBA, Arbol.ALTURAS)
-
-        self.canvas.redraw()
+        self.gameTask = asyncio.create_task(self.pinta_arbol(Arbol.POSICION_RAIZ, Rama.HACIA_ARRIBA, Arbol.ALTURAS))
+        #pinta_arbol_sync (Arbol.POSICION_RAIZ, Rama.HACIA_ARRIBA, Arbol.ALTURAS)
+        #self.canvas.redraw()
 
         return
-
 
     # recorre usando la estructura
     async def pinta_arbol(self, posicion, direccion, altura):
@@ -133,7 +138,6 @@ class JuegoRecursionArbol(toga.App):
         
         if (not self.pre_recursion.value):
             pinta_rama(posicion, direccion, altura)
-
 
 
     def cambiar_punto_inicio(self, canvas, width, height):

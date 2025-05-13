@@ -1,5 +1,6 @@
 from math import radians, cos, sin, exp
 from toga import Canvas
+import time
 from ..arbol import Arbol, Rama, Posicion
 
 
@@ -87,17 +88,18 @@ def pinta_rama(posicion, direccion, altura, color=Arbol.COLOR):
             posic_final = posic_final_rama(posicion, direccion, altura)
             posic_final_tupla = posic_final.tupla()
             s.line_to(*posic_final_tupla)      
-        Arbol.CANVAS.redraw()
+        #Arbol.CANVAS.redraw()
 
 def pinta_hoja(posicion, color=Arbol.COLOR):
         with Arbol.CANVAS.Fill(color='GREEN') as fill:
             fill.arc(posicion.posicion_x, posicion.posicion_y,Arbol.GROSOR_HOJA)
-        Arbol.CANVAS.redraw()
+        #Arbol.CANVAS.redraw()
 
 
 
 def pinta_arbol_sync(posicion, direccion, altura):
 
+    t0 = time.time()
     pinta_rama(posicion, direccion, altura)
     
     nueva_posicion = mueve_arbol(posicion, direccion, altura)
@@ -110,3 +112,6 @@ def pinta_arbol_sync(posicion, direccion, altura):
         pinta_arbol_sync(nueva_posicion, direccion, altura-1)
         pinta_arbol_sync(nueva_posicion, rotar_derecha(direccion), altura-1)
         pinta_arbol_sync(nueva_posicion, rotar_izquierda(direccion), altura-1)
+
+    if altura == Arbol.ALTURAS:
+        print(f"Total sync render time: {time.time() - t0:.2f} s")
